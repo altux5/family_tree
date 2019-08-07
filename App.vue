@@ -1,11 +1,27 @@
 <template>
-  <div>
-    <select v-model="selectedParent">
-      <option :value="item" :key="item" v-for="item in parents">{{item}} </option>
-      <div v-bind="addNewChild"></div>
-    </select>
-    <input v-model="childName" type="text" style="width:200px" />
-    <button @click="addNewChild()">Ekle</button>
+  <div class="flex-container">
+    <div>
+      <div id="headline">
+      <h2>Family Tree</h2><br><h5>Add a Child to the Tree!</h5><br></div>
+        <div>
+          <ul class="ulnav">
+  <li class="linav"><a class="active">Name of Parent:     <select v-model="selectedParent">
+      <option :value="item" :key="item" v-for="item in parents">{{item}}</option>
+    </select></a></li>
+  <li class="linav"><a>Name of Child <input v-model="childName" type="text"></a> </li>
+  <li class="linav"><a>Surname <input v-model="childSurName" type="text"></a></li>
+  <li class="linav"><a>Married? <input type="checkbox" v-model="isChecked1"></a>
+  <li class="linav" v-show="isChecked1"><a>Wife <input v-model="childsWife" type="text"></a> </li>
+  <li class="linav"><a>Date of Birth <input v-model="birthDate" type="text" placeholder="__day__/_month_/___year___"></a></li>
+  <li class="linav"><a>Address <input v-model="address" type="text"></a> </li>
+  <li class="linav"><a>Deceased? <input type="checkbox" v-model="isChecked2"></a>
+  <li class="linav" v-show="isChecked2"><a>Date of death <input v-model="deathDate" type="text" placeholder="__day__/_month_/___year___"></a></li>
+  <li class="linav" v-show="isChecked2"><a>Graveyard Adress <input v-model="graveyardAddress" type="text"></a></li>
+  <button @click="onAddNewChild()">Add the Child!</button>
+</ul>
+        </div>
+    </div>
+
     <div class="tree"></div>
   </div>
 </template>
@@ -13,12 +29,18 @@
 export default {
   data() {
     return {
-      childName:'',
-      selectedParent:'',
+      birthDate: "",
+      graveyardAdress: "",
+      deathDate: "",
+      childName: "",
+      childSurName: "",
+      isChecked1: false,
+      isChecked2: false,
+      selectedParent: "",
       parents: [],
       data: [
         {
-          name: "Baba", 
+          name: "Baba",
           wife: {
             name: "Anne"
           },
@@ -36,7 +58,7 @@ export default {
                   },
                   children: [
                     {
-                      name: "torun ",
+                      name: "torun",
                       wife: {
                         name: "gelin"
                       }
@@ -58,12 +80,7 @@ export default {
                   name: "Torun 3",
                   wife: {
                     name: "Gelin 3"
-                  },
-                  children: [
-                    {
-                      name: "torun"
-                    }
-                  ]
+                  }
                 }
               ]
             },
@@ -75,7 +92,7 @@ export default {
       ]
     };
   },
- /* v forla datayı bul elindeki childı ekle*/
+  /* v forla datayı bul elindeki childı ekle*/
   methods: {
     getParents(node) {
       let data;
@@ -85,21 +102,35 @@ export default {
         data = node;
       }
       data.forEach(d => {
-        this.parents.push(d.name)
+        this.parents.push(d.name);
         if (d.children) {
           this.getParents(d.children);
         }
       });
     },
-   
-    addNewChild() {
-      console.log(this.childName);
-      console.log(this.selectedParent);
-    }
-  },
-  mounted() {
-    this.getParents();
-    function buildList(data, isSub) {
+    onAddNewChild() {
+      this.addNewChild(this.data);
+    },
+    addNewChild(data, isSub) {
+      let _self = this;
+      for (let i = 0; i < data.length; i++) {
+        if (_self.selectedParent === data[i].name) {
+          if (!data[i].children) {
+            data[i].children = [];
+            data[i].children.push({name: _self.childName});
+          } else {
+            data[i].children.push({name: _self.childName});
+          }
+          _self.drawFamilyTree();
+          return;
+        }
+        if (data[i].children) {
+          _self.addNewChild(data[i].children, isSub);
+        }
+      }
+      console.log(JSON.stringify(this.data));
+    },
+    buildList(data, isSub) {
       var html = isSub ? "<div>" : ""; // Wrap with div if true
       html += "<ul>";
       for (let i = 0; i < data.length; i++) {
@@ -109,7 +140,7 @@ export default {
           if (typeof data[i].wife !== "undefined") {
             html += "<a class='wife'>" + data[i].wife.name + "</a>";
           }
-          html += buildList(data[i].children, isSub); // Submenu found. Calling recursively same method (and wrapping it in a div)
+          html += this.buildList(data[i].children, isSub); // Submenu found. Calling recursively same method (and wrapping it in a div)
         } else {
           html += "<a>" + data[i].name + "</a>";
         }
@@ -118,9 +149,17 @@ export default {
       html += "</ul>";
       html += isSub ? "</div>" : "";
       return html;
+    },
+    drawFamilyTree() {
+      document.querySelector(".tree").innerHTML = this.buildList(
+        this.data,
+        false
+      );
     }
-
-    document.querySelector(".tree").innerHTML = buildList(this.data, false);
+  },
+  mounted() {
+    this.getParents();
+    this.drawFamilyTree();
   }
 };
 </script>
@@ -129,6 +168,37 @@ export default {
 * {
   margin: 0;
   padding: 0;
+}
+#headline{
+  font-family: Verdana;
+  font-size: 75.7%;
+  background-color: black;
+  color: white;
+  
+
+}
+
+input{
+  width: 200px;
+  height: 20px;
+}
+select{
+  width: 150px;
+  height: 20px;
+}
+
+.flex-container {
+  display:flex;
+}
+
+
+.flex-container > div {
+  background-color: #f1f1f1;
+  padding: 5px;
+  
+  text-align: center;
+
+  font-size: 30px;
 }
 
 .tree ul {
@@ -236,5 +306,34 @@ export default {
 
 .wife {
   margin-left: 10px;
+}
+.ulnav {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  width: 250px;
+  background-color: #f1f1f1;
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+  font-size: 80%;
+  font-family: verdana;
+}
+
+.linav a {
+  display: block;
+  color: #000;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+.linav a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.linav a:hover:not(.active) {
+  background-color: #555;
+  color: white;
 }
 </style>
